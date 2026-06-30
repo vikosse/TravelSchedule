@@ -14,14 +14,7 @@ protocol RouteStationsServiceProtocol {
     func getRouteStations(uid: String, date: String?) async throws -> ThreadStations
 }
 
-final class RouteStationsService: RouteStationsServiceProtocol {
-    private let client: Client
-    private let apikey: String
-
-    init(client: Client, apikey: String) {
-        self.client = client
-        self.apikey = apikey
-    }
+final class RouteStationsService: BaseService, RouteStationsServiceProtocol {
 
     func getRouteStations(uid: String, date: String? = nil) async throws -> ThreadStations {
         let response = try await client.getRouteStations(query: .init(

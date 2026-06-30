@@ -14,14 +14,7 @@ protocol ScheduleBetweenStationsServiceProtocol {
     func getScheduleBetweenStations(from: String, to: String, date: String?) async throws -> Segments
 }
 
-final class ScheduleBetweenStationsService: ScheduleBetweenStationsServiceProtocol {
-    private let client: Client
-    private let apikey: String
-
-    init(client: Client, apikey: String) {
-        self.client = client
-        self.apikey = apikey
-    }
+final class ScheduleBetweenStationsService: BaseService, ScheduleBetweenStationsServiceProtocol {
 
     func getScheduleBetweenStations(from: String, to: String, date: String? = nil) async throws -> Segments {
         let response = try await client.getSchedualBetweenStations(query: .init(

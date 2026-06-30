@@ -10,6 +10,13 @@ import OpenAPIRuntime
 import OpenAPIURLSession
 
 struct ContentView: View {
+
+    // MARK: - Private Properties
+
+    private let apiKey = Constants.apiKey
+
+    // MARK: - View
+
     var body: some View {
         VStack {
             Image(systemName: "globe")
@@ -22,88 +29,64 @@ struct ContentView: View {
             testAllServices()
         }
     }
-}
 
-// MARK: - Тестовые вызовы методов
+    // MARK: - Private Methods
 
-private let apiKey = Constants.apiKey
+    private func makeClient() throws -> Client {
+        Client(
+            serverURL: try Servers.Server1.url(),
+            transport: URLSessionTransport()
+        )
+    }
 
-private func makeClient() throws -> Client {
-    Client(
-        serverURL: try Servers.Server1.url(),
-        transport: URLSessionTransport()
-    )
-}
+    private func testAllServices() {
+        Task {
+            do {
+                let client = try makeClient()
 
-private func testAllServices() {
-    Task {
-        do {
-            let client = try makeClient()
+                // 1. getNearestStations
+                let nearestStationsService = NearestStationsService(client: client, apikey: apiKey)
+                let stations = try await nearestStationsService.getNearestStations(lat: 59.864177, lng: 30.319163, distance: 50)
+                print("Nearest stations: \(stations)")
 
-            // 1. Список ближайших станций
-            let nearestStationsService = NearestStationsService(client: client, apikey: apiKey)
-            print("--- getNearestStations ---")
-            let stations = try await nearestStationsService.getNearestStations(
-                lat: 59.864177,
-                lng: 30.319163,
-                distance: 50
-            )
-            print("Stations: \(stations)")
+                // 2. getScheduleBetweenStations
+                let scheduleService = ScheduleBetweenStationsService(client: client, apikey: apiKey)
+                let segments = try await scheduleService.getScheduleBetweenStations(from: "c146", to: "c2")
+                print("Schedule between stations: \(segments)")
 
-            // 2. Расписание между станциями
-            let scheduleService = ScheduleBetweenStationsService(client: client, apikey: apiKey)
-            print("--- getScheduleBetweenStations ---")
-            let segments = try await scheduleService.getScheduleBetweenStations(
-                from: "c213",  // Мск
-                to: "c2"       // Спб
-            )
-            print("Segments: \(segments)")
+                // 3. getStationSchedule
+                let stationScheduleService = StationScheduleService(client: client, apikey: apiKey)
+                let stationSchedule = try await stationScheduleService.getStationSchedule(station: "s9600213")
+                print("Station schedule: \(stationSchedule)")
 
-            // 3. Расписание по станции
-            let stationScheduleService = StationScheduleService(client: client, apikey: apiKey)
-            print("--- getStationSchedule ---")
-            let schedule = try await stationScheduleService.getStationSchedule(
-                station: "s9600213"
-            )
-            print("Schedule: \(schedule)")
+                // 4. getRouteStations
+                let routeStationsService = RouteStationsService(client: client, apikey: apiKey)
+                let routeStations = try await routeStationsService.getRouteStations(uid: "SU-1484_260630_c26_12")
+                print("Route stations: \(routeStations)")
 
-            // 4. Список маршрутов
-            let routeStationsService = RouteStationsService(client: client, apikey: apiKey)
-            print("--- getRouteStations ---")
-            let route = try await routeStationsService.getRouteStations(
-                uid: "SU-1484_260630_c26_12" // актуальный рейс Мск - Красноярск
-            )
-            print("Маршрут: \(route)")
+                // 5. getNearestCity
+                let nearestCityService = NearestCityService(client: client, apikey: apiKey)
+                let city = try await nearestCityService.getNearestCity(lat: 59.864177, lng: 30.319163)
+                print("Nearest city: \(city)")
 
-            // 5. Ближайший город
-            let nearestCityService = NearestCityService(client: client, apikey: apiKey)
-            print("--- getNearestCity ---")
-            let city = try await nearestCityService.getNearestCity(
-                lat: 59.864177,
-                lng: 30.319163
-            )
-            print("Nearest city: \(city)")
+                // 6. getCarrierInfo
+                let carrierInfoService = CarrierInfoService(client: client, apikey: apiKey)
+                let carrier = try await carrierInfoService.getCarrierInfo(code: "26")
+                print("Carrier info: \(carrier)")
 
-            // 6. Информация о перевозчике
-            let carrierService = CarrierInfoService(client: client, apikey: apiKey)
-            print("--- getCarrierInfo ---")
-            let carrier = try await carrierService.getCarrierInfo(code: "26") // числовой код Аэрофлота
-            print("Carrier: \(carrier)")
+                // 7. getAllStations
+                let allStationsService = AllStationsService(client: client, apikey: apiKey)
+                let allStations = try await allStationsService.getAllStations()
+                print("All stations: \(allStations)")
 
-            // 7. Список всех станций
-            let allStationsService = AllStationsService(client: client, apikey: apiKey)
-            print("--- getAllStations ---")
-            let allStations = try await allStationsService.getAllStations()
-            print("All stations countries count: \(allStations.countries?.count ?? 0)")
+                // 8. getCopyright
+                let copyrightService = CopyrightService(client: client, apikey: apiKey)
+                let copyright = try await copyrightService.getCopyright()
+                print("Copyright: \(copyright)")
 
-            // 8. Копирайт
-            let copyrightService = CopyrightService(client: client, apikey: apiKey)
-            print("--- getCopyright ---")
-            let copyright = try await copyrightService.getCopyright()
-            print("Copyright: \(copyright)")
-
-        } catch {
-            print("Error: \(error)")
+            } catch {
+                print("Error: \(error)")
+            }
         }
     }
 }
