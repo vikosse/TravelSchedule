@@ -18,7 +18,6 @@ final class RouteStationsService: BaseService, RouteStationsServiceProtocol {
 
     func getRouteStations(uid: String, date: String? = nil) async throws -> ThreadStations {
         let response = try await client.getRouteStations(query: .init(
-            apikey: apikey,
             uid: uid,
             date: date
         ))

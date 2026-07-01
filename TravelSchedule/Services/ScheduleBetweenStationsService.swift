@@ -18,7 +18,6 @@ final class ScheduleBetweenStationsService: BaseService, ScheduleBetweenStations
 
     func getScheduleBetweenStations(from: String, to: String, date: String? = nil) async throws -> Segments {
         let response = try await client.getSchedualBetweenStations(query: .init(
-            apikey: apikey,
             from: from,
             to: to,
             date: date
