@@ -13,12 +13,13 @@ private enum AppTab {
 struct MainTabView: View {
 
     @State private var selectedTab: AppTab = .main
+    @StateObject private var mainScreenViewModel = MainScreenViewModel(stationsStore: StationsStore())
 
     var body: some View {
         ZStack(alignment: .bottom) {
             ZStack {
                 NavigationStack {
-                    MainScreenView()
+                    MainScreenView(viewModel: mainScreenViewModel)
                 }
                 .opacity(selectedTab == .main ? 1 : 0)
                 .allowsHitTesting(selectedTab == .main)
@@ -30,7 +31,9 @@ struct MainTabView: View {
                 .allowsHitTesting(selectedTab == .settings)
             }
 
-            tabBar
+            if !mainScreenViewModel.isShowingCarrierList {
+                tabBar
+            }
         }
     }
 

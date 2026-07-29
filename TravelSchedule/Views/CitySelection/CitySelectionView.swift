@@ -9,18 +9,17 @@ struct CitySelectionView: View {
 
     let onSelect: (City, Station) -> Void
 
-    @Environment(StationsStore.self) private var store
+    @StateObject private var viewModel: CityPickerViewModel
     @Environment(\.dismiss) private var dismiss
-    @State private var searchText = ""
 
-    private var filteredCities: [City] {
-        guard !searchText.isEmpty else { return store.cities }
-        return store.cities.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+    init(store: StationsStore, onSelect: @escaping (City, Station) -> Void) {
+        self.onSelect = onSelect
+        _viewModel = StateObject(wrappedValue: CityPickerViewModel(store: store))
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            SearchField(text: $searchText)
+            SearchField(text: $viewModel.searchText)
                 .padding(.vertical, 8)
 
             content
@@ -42,16 +41,16 @@ struct CitySelectionView: View {
             }
         }
         .task {
-            await store.loadIfNeeded()
+            await viewModel.loadIfNeeded()
         }
     }
 
     @ViewBuilder
     private var content: some View {
-        if store.isLoading {
+        if viewModel.isLoading {
             ProgressView()
                 .tint(Color.ypBlue)
-        } else if let errorMessage = store.errorMessage {
+        } else if let errorMessage = viewModel.errorMessage {
             VStack(spacing: 12) {
                 Text(errorMessage)
                     .font(.system(size: 17))
@@ -60,12 +59,12 @@ struct CitySelectionView: View {
                     .padding(.horizontal, 32)
 
                 Button("Повторить") {
-                    Task { await store.reload() }
+                    Task { await viewModel.reload() }
                 }
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(Color.ypBlue)
             }
-        } else if filteredCities.isEmpty {
+        } else if viewModel.filteredCities.isEmpty {
             NotFoundLabel(text: "Город не найден")
         } else {
             cityList
@@ -75,7 +74,7 @@ struct CitySelectionView: View {
     private var cityList: some View {
         ScrollView {
             LazyVStack(spacing: 0) {
-                ForEach(filteredCities) { city in
+                ForEach(viewModel.filteredCities) { city in
                     NavigationLink {
                         StationSelectionView(city: city) { station in
                             onSelect(city, station)
@@ -92,7 +91,6 @@ struct CitySelectionView: View {
 
 #Preview {
     NavigationStack {
-        CitySelectionView { _, _ in }
+        CitySelectionView(store: StationsStore()) { _, _ in }
     }
-    .environment(StationsStore())
 }

@@ -5,40 +5,15 @@
 
 import SwiftUI
 
-private enum RouteField {
-    case from
-    case to
-}
-
 struct MainScreenView: View {
 
-    @State private var stationsStore = StationsStore()
-
-    @State private var fromCity: City?
-    @State private var fromStation: Station?
-    @State private var toCity: City?
-    @State private var toStation: Station?
-
-    @State private var isPickerPresented = false
-    @State private var activeField: RouteField = .from
-
-    private var fromText: String {
-        routeText(city: fromCity, station: fromStation)
-    }
-
-    private var toText: String {
-        routeText(city: toCity, station: toStation)
-    }
-
-    private var isSearchAvailable: Bool {
-        fromStation != nil && toStation != nil
-    }
+    @ObservedObject var viewModel: MainScreenViewModel
 
     var body: some View {
         VStack(spacing: 16) {
             routeCard
 
-            if isSearchAvailable {
+            if viewModel.isSearchAvailable {
                 findButton
             }
 
@@ -49,16 +24,27 @@ struct MainScreenView: View {
         .background(Color.ypWhite)
         .ignoresSafeArea(edges: .top)
         .task {
-            await stationsStore.loadIfNeeded()
+            await viewModel.loadStationsIfNeeded()
         }
-        .fullScreenCover(isPresented: $isPickerPresented) {
+        .fullScreenCover(isPresented: $viewModel.isPickerPresented) {
             NavigationStack {
-                CitySelectionView { city, station in
-                    apply(city: city, station: station)
-                    isPickerPresented = false
+                CitySelectionView(store: viewModel.stationsStore) { city, station in
+                    viewModel.apply(city: city, station: station)
                 }
             }
-            .environment(stationsStore)
+        }
+        .navigationDestination(isPresented: $viewModel.isShowingCarrierList) {
+            if let fromCity = viewModel.fromCity,
+               let fromStation = viewModel.fromStation,
+               let toCity = viewModel.toCity,
+               let toStation = viewModel.toStation {
+                CarrierListView(
+                    fromCity: fromCity,
+                    fromStation: fromStation,
+                    toCity: toCity,
+                    toStation: toStation
+                )
+            }
         }
     }
 
@@ -80,8 +66,8 @@ struct MainScreenView: View {
 
     private var fieldsContainer: some View {
         VStack(spacing: 0) {
-            fieldRow(placeholder: "Откуда", text: fromText, field: .from)
-            fieldRow(placeholder: "Куда", text: toText, field: .to)
+            fieldRow(placeholder: "Откуда", text: viewModel.fromText, field: .from)
+            fieldRow(placeholder: "Куда", text: viewModel.toText, field: .to)
         }
         .background(Color.ypWhite)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
@@ -89,8 +75,7 @@ struct MainScreenView: View {
 
     private func fieldRow(placeholder: String, text: String, field: RouteField) -> some View {
         Button {
-            activeField = field
-            isPickerPresented = true
+            viewModel.presentPicker(for: field)
         } label: {
             HStack {
                 Text(text.isEmpty ? placeholder : text)
@@ -108,7 +93,7 @@ struct MainScreenView: View {
 
     private var swapButton: some View {
         Button {
-            swapFields()
+            viewModel.swapFields()
         } label: {
             Image(.changeButton)
                 .resizable()
@@ -119,6 +104,7 @@ struct MainScreenView: View {
 
     private var findButton: some View {
         Button {
+            viewModel.find()
         } label: {
             Text("Найти")
                 .font(.system(size: 17, weight: .semibold))
@@ -129,30 +115,8 @@ struct MainScreenView: View {
         }
         .buttonStyle(.plain)
     }
-
-    private func routeText(city: City?, station: Station?) -> String {
-        guard let city else { return "" }
-        guard let station else { return city.name }
-        return "\(city.name) (\(station.name))"
-    }
-
-    private func apply(city: City, station: Station) {
-        switch activeField {
-        case .from:
-            fromCity = city
-            fromStation = station
-        case .to:
-            toCity = city
-            toStation = station
-        }
-    }
-
-    private func swapFields() {
-        swap(&fromCity, &toCity)
-        swap(&fromStation, &toStation)
-    }
 }
 
 #Preview {
-    MainScreenView()
+    MainScreenView(viewModel: MainScreenViewModel(stationsStore: StationsStore()))
 }

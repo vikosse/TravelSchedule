@@ -7,19 +7,18 @@ import SwiftUI
 
 struct StationSelectionView: View {
 
-    let city: City
     let onSelect: (Station) -> Void
 
-    @State private var searchText = ""
+    @StateObject private var viewModel: StationPickerViewModel
 
-    private var filteredStations: [Station] {
-        guard !searchText.isEmpty else { return city.stations }
-        return city.stations.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+    init(city: City, onSelect: @escaping (Station) -> Void) {
+        self.onSelect = onSelect
+        _viewModel = StateObject(wrappedValue: StationPickerViewModel(city: city))
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            SearchField(text: $searchText)
+            SearchField(text: $viewModel.searchText)
                 .padding(.vertical, 8)
 
             content
@@ -32,12 +31,12 @@ struct StationSelectionView: View {
 
     @ViewBuilder
     private var content: some View {
-        if filteredStations.isEmpty {
+        if viewModel.filteredStations.isEmpty {
             NotFoundLabel(text: "Станция не найдена")
         } else {
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    ForEach(filteredStations) { station in
+                    ForEach(viewModel.filteredStations) { station in
                         Button {
                             onSelect(station)
                         } label: {

@@ -4,18 +4,21 @@
 //
 
 import Foundation
-import Observation
-import OpenAPIRuntime
-import OpenAPIURLSession
+import Combine
 
-@Observable
-final class StationsStore {
+@MainActor
+final class StationsStore: ObservableObject {
 
-    private(set) var cities: [City] = []
-    private(set) var isLoading = false
-    private(set) var errorMessage: String?
+    @Published private(set) var cities: [City] = []
+    @Published private(set) var isLoading = false
+    @Published private(set) var errorMessage: String?
 
+    private let service: StationsCatalogServiceProtocol
     private var hasLoadedOnce = false
+
+    init(service: StationsCatalogServiceProtocol = StationsCatalogService()) {
+        self.service = service
+    }
 
     func loadIfNeeded() async {
         guard !hasLoadedOnce, !isLoading else { return }
@@ -31,21 +34,13 @@ final class StationsStore {
         errorMessage = nil
 
         do {
-            let client = try Self.makeClient()
-            cities = try await StationsCatalogService.fetchCities(client: client)
+            let client = try APIClientFactory.makeClient()
+            cities = try await service.fetchCities(client: client)
             hasLoadedOnce = true
         } catch {
             errorMessage = "Не удалось загрузить список городов. Проверьте подключение к интернету и попробуйте ещё раз."
         }
 
         isLoading = false
-    }
-
-    private static func makeClient() throws -> Client {
-        Client(
-            serverURL: try Servers.Server1.url(),
-            transport: URLSessionTransport(),
-            middlewares: [AuthMiddleware(apiKey: Constants.apiKey)]
-        )
     }
 }
