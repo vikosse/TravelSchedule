@@ -18,12 +18,7 @@ protocol AllStationsServiceProtocol {
 final class AllStationsService: BaseService, AllStationsServiceProtocol {
 
     func getAllStations() async throws -> AllStations {
-        let response = try await client.getAllStations(query: .init())
-
-        let responseBody = try response.ok.body.html
-        let limit = 50 * 1024 * 1024
-        let fullData = try await Data(collecting: responseBody, upTo: limit)
-
+        let fullData = try await AllStationsRawDataFetcher.fetchData(client: client)
         return try JSONDecoder().decode(AllStations.self, from: fullData)
     }
 }
