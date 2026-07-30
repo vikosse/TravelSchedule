@@ -32,7 +32,7 @@ struct SearchField: View {
         }
         .padding(.horizontal, 8)
         .frame(height: 36)
-        .background(Color.ypLightGrey)
+        .background(Color.ypSearchBackground)
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .padding(.horizontal, 16)
     }

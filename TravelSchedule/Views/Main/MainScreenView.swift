@@ -69,7 +69,7 @@ struct MainScreenView: View {
             fieldRow(placeholder: "Откуда", text: viewModel.fromText, field: .from)
             fieldRow(placeholder: "Куда", text: viewModel.toText, field: .to)
         }
-        .background(Color.ypWhite)
+        .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
@@ -80,7 +80,7 @@ struct MainScreenView: View {
             HStack {
                 Text(text.isEmpty ? placeholder : text)
                     .font(.system(size: 17))
-                    .foregroundStyle(text.isEmpty ? Color.ypGray : Color.ypBlack)
+                    .foregroundStyle(text.isEmpty ? Color.ypGray : Color.ypBlackUniversal)
                     .lineLimit(1)
                 Spacer(minLength: 0)
             }
@@ -108,7 +108,7 @@ struct MainScreenView: View {
         } label: {
             Text("Найти")
                 .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(Color.ypWhite)
+                .foregroundStyle(Color.white)
                 .frame(width: 150, height: 60)
                 .background(Color.ypBlue)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))

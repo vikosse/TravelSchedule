@@ -18,8 +18,16 @@ struct MainTabView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             ZStack {
-                NavigationStack {
-                    MainScreenView(viewModel: mainScreenViewModel)
+                Group {
+                    if let networkErrorKind = mainScreenViewModel.networkErrorKind {
+                        NetworkErrorView(kind: networkErrorKind) {
+                            Task { await mainScreenViewModel.retryLoadingStations() }
+                        }
+                    } else {
+                        NavigationStack {
+                            MainScreenView(viewModel: mainScreenViewModel)
+                        }
+                    }
                 }
                 .opacity(selectedTab == .main ? 1 : 0)
                 .allowsHitTesting(selectedTab == .main)
@@ -62,7 +70,7 @@ struct MainTabView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 30, height: 30)
-                .foregroundStyle(selectedTab == tab ? Color.ypBlue : Color.ypGray)
+                .foregroundStyle(selectedTab == tab ? Color.ypBlack : Color.ypGray)
         }
         .buttonStyle(.plain)
     }

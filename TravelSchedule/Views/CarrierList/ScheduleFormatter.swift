@@ -59,6 +59,18 @@ enum ScheduleFormatter {
         return "\(hours) ч \(minutes) мин"
     }
 
+    static func duration(fromDeparture departure: String, arrival: String) -> String? {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        guard
+            let departureDate = formatter.date(from: departure),
+            let arrivalDate = formatter.date(from: arrival)
+        else { return nil }
+        let seconds = Int(arrivalDate.timeIntervalSince(departureDate))
+        guard seconds > 0 else { return nil }
+        return duration(seconds: seconds)
+    }
+
     private static func pluralizedHours(_ count: Int) -> String {
         let mod100 = count % 100
         let mod10 = count % 10

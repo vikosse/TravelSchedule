@@ -16,7 +16,7 @@ final class CityPickerViewModel: ObservableObject {
     private var cancellables: Set<AnyCancellable> = []
 
     var isLoading: Bool { store.isLoading }
-    var errorMessage: String? { store.errorMessage }
+    var networkErrorKind: NetworkErrorKind? { store.networkErrorKind }
 
     init(store: StationsStore) {
         self.store = store
@@ -24,10 +24,7 @@ final class CityPickerViewModel: ObservableObject {
 
         store.$cities
             .combineLatest($searchText.debounce(for: .milliseconds(300), scheduler: RunLoop.main))
-            .map { cities, query in
-                guard !query.isEmpty else { return cities }
-                return cities.filter { $0.name.localizedCaseInsensitiveContains(query) }
-            }
+            .map { cities, query in SearchFilter.apply(cities, query: query, keyPath: \.name) }
             .receive(on: RunLoop.main)
             .assign(to: &$filteredCities)
 

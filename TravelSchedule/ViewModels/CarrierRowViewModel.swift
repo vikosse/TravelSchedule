@@ -5,18 +5,42 @@
 
 import Foundation
 
-struct CarrierRowViewModel {
+struct CarrierRowViewModel: Identifiable {
 
     let segment: Segment
     let fallbackDate: String
 
+    var id: String {
+        let threadUID = segment.thread?.uid ?? segment.details?.compactMap(\.thread).first?.uid ?? ""
+        let departureKey = segment.departure ?? segment.start_date ?? ""
+        return "\(threadUID)_\(departureKey)"
+    }
+
     var carrierName: String {
-        segment.thread?.carrier?.title ?? segment.thread?.title ?? ""
+        if let thread = segment.thread {
+            return thread.carrier?.title ?? thread.title ?? ""
+        }
+        if let firstLegThread = segment.details?.compactMap(\.thread).first {
+            return firstLegThread.carrier?.title ?? firstLegThread.title ?? ""
+        }
+        return ""
     }
 
     var logoURL: URL? {
-        guard let logo = segment.thread?.carrier?.logo else { return nil }
+        let logo = segment.thread?.carrier?.logo ?? segment.details?.compactMap(\.thread).first?.carrier?.logo
+        guard let logo else { return nil }
         return URL(string: logo)
+    }
+
+    var transferCityName: String? {
+        segment.transfers?.first?.title
+    }
+
+    var transferLabel: String {
+        if let transferCityName, !transferCityName.isEmpty {
+            return "С пересадкой в \(CityDeclensionFormatter.prepositional(transferCityName))"
+        }
+        return "С пересадкой"
     }
 
     var departureText: String {
@@ -55,6 +79,16 @@ struct CarrierRowViewModel {
     }
 
     var durationText: String? {
-        segment.duration.map(ScheduleFormatter.duration)
+        if let duration = segment.duration {
+            return ScheduleFormatter.duration(seconds: duration)
+        }
+        if let departure = segment.departure, let arrival = segment.arrival {
+            return ScheduleFormatter.duration(fromDeparture: departure, arrival: arrival)
+        }
+        return nil
+    }
+
+    var hasTransfers: Bool {
+        segment.has_transfers ?? false
     }
 }

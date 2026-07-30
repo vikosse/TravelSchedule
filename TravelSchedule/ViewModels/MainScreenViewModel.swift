@@ -25,8 +25,19 @@ final class MainScreenViewModel: ObservableObject {
     @Published var isShowingCarrierList = false
     @Published private(set) var activeField: RouteField = .from
 
+    private var cancellables: Set<AnyCancellable> = []
+
     init(stationsStore: StationsStore) {
         self.stationsStore = stationsStore
+
+        stationsStore.objectWillChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+    }
+
+    var networkErrorKind: NetworkErrorKind? {
+        stationsStore.networkErrorKind
     }
 
     var fromText: String {
@@ -69,6 +80,10 @@ final class MainScreenViewModel: ObservableObject {
 
     func loadStationsIfNeeded() async {
         await stationsStore.loadIfNeeded()
+    }
+
+    func retryLoadingStations() async {
+        await stationsStore.reload()
     }
 
     private func routeText(city: City?, station: Station?) -> String {

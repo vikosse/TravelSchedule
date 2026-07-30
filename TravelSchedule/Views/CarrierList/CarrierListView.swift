@@ -40,6 +40,14 @@ struct CarrierListView: View {
         .task {
             await viewModel.load()
         }
+        .navigationDestination(isPresented: $viewModel.isShowingFilters) {
+            FiltersView(
+                selectedTimeSlots: viewModel.selectedTimeSlots,
+                transfersOption: viewModel.transfersOption
+            ) { timeSlots, transfersOption in
+                viewModel.applyFilters(timeSlots: timeSlots, transfersOption: transfersOption)
+            }
+        }
     }
 
     @ViewBuilder
@@ -47,27 +55,17 @@ struct CarrierListView: View {
         if viewModel.isLoading {
             ProgressView()
                 .tint(Color.ypBlue)
-        } else if let errorMessage = viewModel.errorMessage {
-            VStack(spacing: 12) {
-                Text(errorMessage)
-                    .font(.system(size: 17))
-                    .foregroundStyle(Color.ypGray)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-
-                Button("Повторить") {
-                    Task { await viewModel.load() }
-                }
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(Color.ypBlue)
+        } else if let networkErrorKind = viewModel.networkErrorKind {
+            NetworkErrorView(kind: networkErrorKind) {
+                Task { await viewModel.load() }
             }
-        } else if viewModel.segments.isEmpty {
+        } else if viewModel.filteredSegments.isEmpty {
             NotFoundLabel(text: "Вариантов нет")
         } else {
             ScrollView {
                 LazyVStack(spacing: 8) {
-                    ForEach(Array(viewModel.segments.enumerated()), id: \.offset) { _, segment in
-                        CarrierRow(viewModel: CarrierRowViewModel(segment: segment, fallbackDate: ScheduleFormatter.today()))
+                    ForEach(viewModel.rowViewModels) { rowViewModel in
+                        CarrierRow(viewModel: rowViewModel)
                     }
                 }
                 .padding(16)
@@ -77,19 +75,27 @@ struct CarrierListView: View {
 
     private var refineTimeButton: some View {
         Button {
+            viewModel.showFilters()
         } label: {
-            Text("Уточнить время")
-                .font(.system(size: 17, weight: .bold))
-                .foregroundStyle(Color.ypWhite)
-                .frame(maxWidth: .infinity)
-                .frame(height: 60)
-                .background(Color.ypBlue)
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            HStack(spacing: 8) {
+                Text("Уточнить время")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(Color.white)
+
+                if viewModel.hasActiveFilters {
+                    Circle()
+                        .fill(Color.ypRed)
+                        .frame(width: 8, height: 8)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 60)
+            .background(Color.ypBlue)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
         .buttonStyle(.plain)
         .padding(.horizontal, 16)
         .padding(.top, 8)
-        .background(Color.ypWhite)
     }
 }
 

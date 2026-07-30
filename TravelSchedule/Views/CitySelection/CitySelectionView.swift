@@ -50,19 +50,9 @@ struct CitySelectionView: View {
         if viewModel.isLoading {
             ProgressView()
                 .tint(Color.ypBlue)
-        } else if let errorMessage = viewModel.errorMessage {
-            VStack(spacing: 12) {
-                Text(errorMessage)
-                    .font(.system(size: 17))
-                    .foregroundStyle(Color.ypGray)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-
-                Button("Повторить") {
-                    Task { await viewModel.reload() }
-                }
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(Color.ypBlue)
+        } else if let networkErrorKind = viewModel.networkErrorKind {
+            NetworkErrorView(kind: networkErrorKind) {
+                Task { await viewModel.reload() }
             }
         } else if viewModel.filteredCities.isEmpty {
             NotFoundLabel(text: "Город не найден")

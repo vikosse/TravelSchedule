@@ -11,7 +11,7 @@ final class StationsStore: ObservableObject {
 
     @Published private(set) var cities: [City] = []
     @Published private(set) var isLoading = false
-    @Published private(set) var errorMessage: String?
+    @Published private(set) var networkErrorKind: NetworkErrorKind?
 
     private let service: StationsCatalogServiceProtocol
     private var hasLoadedOnce = false
@@ -31,14 +31,14 @@ final class StationsStore: ObservableObject {
 
     private func load() async {
         isLoading = true
-        errorMessage = nil
+        networkErrorKind = nil
 
         do {
             let client = try APIClientFactory.makeClient()
             cities = try await service.fetchCities(client: client)
             hasLoadedOnce = true
         } catch {
-            errorMessage = "Не удалось загрузить список городов. Проверьте подключение к интернету и попробуйте ещё раз."
+            networkErrorKind = NetworkErrorClassifier.classify(error)
         }
 
         isLoading = false

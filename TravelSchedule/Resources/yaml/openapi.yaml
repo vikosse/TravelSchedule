@@ -479,6 +479,63 @@ components:
         start_date:
           type: string
           description: Дата начала рейса (YYYY-MM-DD)
+        has_transfers:
+          type: boolean
+          description: Признак наличия пересадок в рейсе
+        departure_from:
+          $ref: '#/components/schemas/Station'
+        arrival_to:
+          $ref: '#/components/schemas/Station'
+        transport_types:
+          type: array
+          items:
+            type: string
+        transfers:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransferPoint'
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/SegmentDetail'
+    TransferPoint:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        short_title:
+          type: string
+        popular_title:
+          type: string
+        code:
+          type: string
+    SegmentDetail:
+      type: object
+      properties:
+        thread:
+          $ref: '#/components/schemas/Thread'
+        from:
+          $ref: '#/components/schemas/Station'
+        to:
+          $ref: '#/components/schemas/Station'
+        departure:
+          type: string
+        arrival:
+          type: string
+        duration:
+          type: integer
+        start_date:
+          type: string
+        is_transfer:
+          type: boolean
+        transfer_point:
+          $ref: '#/components/schemas/TransferPoint'
+        transfer_from:
+          $ref: '#/components/schemas/Station'
+        transfer_to:
+          $ref: '#/components/schemas/Station'
     Pagination:
       type: object
       properties:

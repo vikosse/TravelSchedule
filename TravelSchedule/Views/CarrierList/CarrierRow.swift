@@ -14,16 +14,24 @@ struct CarrierRow: View {
             HStack(alignment: .center, spacing: 8) {
                 logoView
 
-                Text(viewModel.carrierName)
-                    .font(.system(size: 17))
-                    .foregroundStyle(Color.ypBlack)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(viewModel.carrierName)
+                        .font(.system(size: 17))
+                        .foregroundStyle(Color.ypBlackUniversal)
+
+                    if viewModel.hasTransfers {
+                        Text(viewModel.transferLabel)
+                            .font(.system(size: 12, weight: .regular))
+                            .foregroundStyle(Color.ypRed)
+                    }
+                }
 
                 Spacer(minLength: 0)
 
                 if !viewModel.dateText.isEmpty {
                     Text(viewModel.dateText)
                         .font(.system(size: 12, weight: .regular))
-                        .foregroundStyle(Color.ypBlack)
+                        .foregroundStyle(Color.ypBlackUniversal)
                 }
             }
             .padding(.horizontal, 14)
@@ -37,7 +45,7 @@ struct CarrierRow: View {
 
     private var logoView: some View {
         RoundedRectangle(cornerRadius: 12, style: .continuous)
-            .fill(Color.ypWhite)
+            .fill(Color.white)
             .frame(width: 38, height: 38)
             .overlay {
                 if let logoURL = viewModel.logoURL {
@@ -68,7 +76,7 @@ struct CarrierRow: View {
         HStack(spacing: 8) {
             Text(viewModel.departureText)
                 .font(.system(size: 17, weight: .regular))
-                .foregroundStyle(Color.ypBlack)
+                .foregroundStyle(Color.ypBlackUniversal)
 
             ZStack {
                 Rectangle()
@@ -78,7 +86,7 @@ struct CarrierRow: View {
                 if let durationText = viewModel.durationText {
                     Text(durationText)
                         .font(.system(size: 12))
-                        .foregroundStyle(Color.ypBlack)
+                        .foregroundStyle(Color.ypBlackUniversal)
                         .padding(.horizontal, 6)
                         .background(Color.ypLightGrey)
                 }
@@ -87,7 +95,7 @@ struct CarrierRow: View {
 
             Text(viewModel.arrivalText)
                 .font(.system(size: 17, weight: .regular))
-                .foregroundStyle(Color.ypBlack)
+                .foregroundStyle(Color.ypBlackUniversal)
         }
         .padding(14)
     }

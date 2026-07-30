@@ -20,10 +20,7 @@ final class StationPickerViewModel: ObservableObject {
 
         $searchText
             .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
-            .map { query in
-                guard !query.isEmpty else { return city.stations }
-                return city.stations.filter { $0.name.localizedCaseInsensitiveContains(query) }
-            }
+            .map { query in SearchFilter.apply(city.stations, query: query, keyPath: \.name) }
             .receive(on: RunLoop.main)
             .assign(to: &$filteredStations)
     }
