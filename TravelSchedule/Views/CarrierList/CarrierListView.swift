@@ -9,13 +9,8 @@ struct CarrierListView: View {
 
     @StateObject private var viewModel: CarrierListViewModel
 
-    init(fromCity: City, fromStation: Station, toCity: City, toStation: Station) {
-        _viewModel = StateObject(wrappedValue: CarrierListViewModel(
-            fromCity: fromCity,
-            fromStation: fromStation,
-            toCity: toCity,
-            toStation: toStation
-        ))
+    init(route: TravelRoute) {
+        _viewModel = StateObject(wrappedValue: CarrierListViewModel(route: route))
     }
 
     var body: some View {
@@ -33,7 +28,7 @@ struct CarrierListView: View {
         }
         .background(Color.ypWhite.ignoresSafeArea())
         .safeAreaInset(edge: .bottom) {
-            if !viewModel.segments.isEmpty {
+            if viewModel.hasSegments {
                 refineTimeButton
             }
         }
@@ -52,23 +47,26 @@ struct CarrierListView: View {
 
     @ViewBuilder
     private var content: some View {
-        if viewModel.isLoading {
+        switch viewModel.state {
+        case .loading:
             ProgressView()
                 .tint(Color.ypBlue)
-        } else if let networkErrorKind = viewModel.networkErrorKind {
+        case .failure(let networkErrorKind):
             NetworkErrorView(kind: networkErrorKind) {
                 Task { await viewModel.load() }
             }
-        } else if viewModel.filteredSegments.isEmpty {
-            NotFoundLabel(text: "Вариантов нет")
-        } else {
-            ScrollView {
-                LazyVStack(spacing: 8) {
-                    ForEach(viewModel.rowViewModels) { rowViewModel in
-                        CarrierRow(viewModel: rowViewModel)
+        case .success:
+            if viewModel.filteredSegments.isEmpty {
+                NotFoundLabel(text: "Вариантов нет")
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 8) {
+                        ForEach(viewModel.rowViewModels) { rowViewModel in
+                            CarrierRowView(viewModel: rowViewModel)
+                        }
                     }
+                    .padding(16)
                 }
-                .padding(16)
             }
         }
     }
@@ -101,11 +99,11 @@ struct CarrierListView: View {
 
 #Preview {
     NavigationStack {
-        CarrierListView(
+        CarrierListView(route: TravelRoute(
             fromCity: City(id: "c213", name: "Москва", stations: []),
             fromStation: Station(id: "s9601788", name: "Ярославский вокзал"),
             toCity: City(id: "c2", name: "Санкт-Петербург", stations: []),
             toStation: Station(id: "s9602497", name: "Балтийский вокзал")
-        )
+        ))
     }
 }

@@ -1,5 +1,5 @@
 //
-//  Segment.swift
+//  APITypealiases.swift
 //  TravelSchedule
 //
 

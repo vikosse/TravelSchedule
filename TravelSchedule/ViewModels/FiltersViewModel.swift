@@ -9,14 +9,22 @@ import Combine
 @MainActor
 final class FiltersViewModel: ObservableObject {
 
+    // MARK: - Published properties
+
     @Published var selectedTimeSlots: Set<TimeSlot>
     @Published var transfersOption: TransfersOption?
 
+    // MARK: - Private properties
+
     private let onApply: (Set<TimeSlot>, TransfersOption?) -> Void
+
+    // MARK: - Computed properties
 
     var isApplyAvailable: Bool {
         !selectedTimeSlots.isEmpty || transfersOption != nil
     }
+
+    // MARK: - Initializer
 
     init(
         selectedTimeSlots: Set<TimeSlot>,
@@ -28,7 +36,9 @@ final class FiltersViewModel: ObservableObject {
         self.onApply = onApply
     }
 
-    func toggle(_ timeSlot: TimeSlot) {
+    // MARK: - Public methods
+
+    func toggleTimeSlotSelection(_ timeSlot: TimeSlot) {
         if selectedTimeSlots.contains(timeSlot) {
             selectedTimeSlots.remove(timeSlot)
         } else {

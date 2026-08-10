@@ -26,15 +26,15 @@ struct FiltersView: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    section(title: "Время отправления") {
+                    filterSection(title: "Время отправления") {
                         ForEach(TimeSlot.allCases, id: \.self) { timeSlot in
-                            checkboxRow(timeSlot: timeSlot)
+                            timeSlotRow(for: timeSlot)
                         }
                     }
 
-                    section(title: "Показывать варианты с пересадками") {
+                    filterSection(title: "Показывать варианты с пересадками") {
                         ForEach(TransfersOption.allCases, id: \.self) { option in
-                            radioRow(option: option)
+                            transfersOptionRow(for: option)
                         }
                     }
                 }
@@ -62,7 +62,7 @@ struct FiltersView: View {
         }
     }
 
-    private func section<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+    private func filterSection<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(title)
                 .font(.system(size: 24, weight: .bold))
@@ -74,16 +74,16 @@ struct FiltersView: View {
         }
     }
 
-    private func checkboxRow(timeSlot: TimeSlot) -> some View {
+    private func timeSlotRow(for timeSlot: TimeSlot) -> some View {
         Button {
-            viewModel.toggle(timeSlot)
+            viewModel.toggleTimeSlotSelection(timeSlot)
         } label: {
             HStack {
                 Text(timeSlot.title)
                     .font(.system(size: 17))
                     .foregroundStyle(Color.ypBlack)
                 Spacer(minLength: 0)
-                checkbox(isSelected: viewModel.selectedTimeSlots.contains(timeSlot))
+                checkboxView(isSelected: viewModel.selectedTimeSlots.contains(timeSlot))
             }
             .frame(height: 60)
             .contentShape(Rectangle())
@@ -91,7 +91,7 @@ struct FiltersView: View {
         .buttonStyle(.plain)
     }
 
-    private func radioRow(option: TransfersOption) -> some View {
+    private func transfersOptionRow(for option: TransfersOption) -> some View {
         Button {
             viewModel.select(option)
         } label: {
@@ -100,7 +100,7 @@ struct FiltersView: View {
                     .font(.system(size: 17))
                     .foregroundStyle(Color.ypBlack)
                 Spacer(minLength: 0)
-                radioMark(isSelected: viewModel.transfersOption == option)
+                radioButtonView(isSelected: viewModel.transfersOption == option)
             }
             .frame(height: 60)
             .contentShape(Rectangle())
@@ -108,7 +108,7 @@ struct FiltersView: View {
         .buttonStyle(.plain)
     }
 
-    private func checkbox(isSelected: Bool) -> some View {
+    private func checkboxView(isSelected: Bool) -> some View {
         RoundedRectangle(cornerRadius: 4, style: .continuous)
             .fill(isSelected ? Color.ypBlack : Color.clear)
             .overlay(
@@ -126,7 +126,7 @@ struct FiltersView: View {
             .frame(width: 24, height: 24)
     }
 
-    private func radioMark(isSelected: Bool) -> some View {
+    private func radioButtonView(isSelected: Bool) -> some View {
         Circle()
             .strokeBorder(Color.ypBlack, lineWidth: 2)
             .frame(width: 20, height: 20)

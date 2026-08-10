@@ -6,28 +6,37 @@
 import Foundation
 import Combine
 
+enum CarrierListState {
+    case loading
+    case success([Segment])
+    case failure(NetworkErrorKind)
+}
+
 @MainActor
 final class CarrierListViewModel: ObservableObject {
 
-    let fromCity: City
-    let fromStation: Station
-    let toCity: City
-    let toStation: Station
+    // MARK: - Published properties
 
-    @Published private(set) var segments: [Segment] = []
-    @Published private(set) var isLoading = false
-    @Published private(set) var networkErrorKind: NetworkErrorKind?
-
+    @Published private(set) var state: CarrierListState = .loading
     @Published private(set) var selectedTimeSlots: Set<TimeSlot> = []
     @Published private(set) var transfersOption: TransfersOption?
     @Published var isShowingFilters = false
 
+    // MARK: - Private properties
+
+    private let route: TravelRoute
+
+    // MARK: - Computed properties
+
     var routeTitle: String {
-        "\(RouteNameFormatter.displayName(city: fromCity, station: fromStation)) → \(RouteNameFormatter.displayName(city: toCity, station: toStation))"
+        let from = RouteNameFormatter.displayName(city: route.fromCity, station: route.fromStation)
+        let to = RouteNameFormatter.displayName(city: route.toCity, station: route.toStation)
+        return "\(from) → \(to)"
     }
 
     var filteredSegments: [Segment] {
-        segments.filter { matchesTimeSlots($0) && matchesTransfersOption($0) }
+        guard case let .success(segments) = state else { return [] }
+        return segments.filter { matchesTimeSlots($0) && matchesTransfersOption($0) }
     }
 
     var rowViewModels: [CarrierRowViewModel] {
@@ -39,33 +48,48 @@ final class CarrierListViewModel: ObservableObject {
         !selectedTimeSlots.isEmpty || transfersOption != nil
     }
 
-    init(fromCity: City, fromStation: Station, toCity: City, toStation: Station) {
-        self.fromCity = fromCity
-        self.fromStation = fromStation
-        self.toCity = toCity
-        self.toStation = toStation
+    var hasSegments: Bool {
+        guard case let .success(segments) = state else { return false }
+        return !segments.isEmpty
     }
 
+    // MARK: - Initializer
+
+    init(route: TravelRoute) {
+        self.route = route
+    }
+
+    // MARK: - Public methods
+
     func load() async {
-        isLoading = true
-        networkErrorKind = nil
+        state = .loading
 
         do {
             let client = try APIClientFactory.makeClient()
             let service = ScheduleBetweenStationsService(client: client)
             let result = try await service.getScheduleBetweenStations(
-                from: fromStation.id,
-                to: toStation.id,
+                from: route.fromStation.id,
+                to: route.toStation.id,
                 date: ScheduleFormatter.queryDateString(),
                 transfers: true
             )
-            segments = (result.segments ?? []).sorted { departureSortKey(for: $0) < departureSortKey(for: $1) }
+            let segments = (result.segments ?? []).sorted { departureSortKey(for: $0) < departureSortKey(for: $1) }
+            state = .success(segments)
         } catch {
-            networkErrorKind = NetworkErrorClassifier.classify(error)
+            state = .failure(NetworkErrorClassifier.classify(error))
         }
-
-        isLoading = false
     }
+
+    func showFilters() {
+        isShowingFilters = true
+    }
+
+    func applyFilters(timeSlots: Set<TimeSlot>, transfersOption: TransfersOption?) {
+        selectedTimeSlots = timeSlots
+        self.transfersOption = transfersOption
+    }
+
+    // MARK: - Private methods
 
     private func departureSortKey(for segment: Segment) -> String {
         let datePart = segment.start_date ?? ""
@@ -92,14 +116,5 @@ final class CarrierListViewModel: ObservableObject {
         case .yes: return hasTransfers
         case .no: return !hasTransfers
         }
-    }
-
-    func showFilters() {
-        isShowingFilters = true
-    }
-
-    func applyFilters(timeSlots: Set<TimeSlot>, transfersOption: TransfersOption?) {
-        selectedTimeSlots = timeSlots
-        self.transfersOption = transfersOption
     }
 }

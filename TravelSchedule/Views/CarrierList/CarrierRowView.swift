@@ -1,11 +1,11 @@
 //
-//  CarrierRow.swift
+//  CarrierRowView.swift
 //  TravelSchedule
 //
 
 import SwiftUI
 
-struct CarrierRow: View {
+struct CarrierRowView: View {
 
     let viewModel: CarrierRowViewModel
 
@@ -13,26 +13,9 @@ struct CarrierRow: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .center, spacing: 8) {
                 logoView
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(viewModel.carrierName)
-                        .font(.system(size: 17))
-                        .foregroundStyle(Color.ypBlackUniversal)
-
-                    if viewModel.hasTransfers {
-                        Text(viewModel.transferLabel)
-                            .font(.system(size: 12, weight: .regular))
-                            .foregroundStyle(Color.ypRed)
-                    }
-                }
-
+                carrierInfoView
                 Spacer(minLength: 0)
-
-                if !viewModel.dateText.isEmpty {
-                    Text(viewModel.dateText)
-                        .font(.system(size: 12, weight: .regular))
-                        .foregroundStyle(Color.ypBlackUniversal)
-                }
+                dateView
             }
             .padding(.horizontal, 14)
 
@@ -70,6 +53,29 @@ struct CarrierRow: View {
         Text(viewModel.carrierName.prefix(1).uppercased())
             .font(.system(size: 15, weight: .bold))
             .foregroundStyle(Color.ypGray)
+    }
+
+    private var carrierInfoView: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(viewModel.carrierName)
+                .font(.system(size: 17))
+                .foregroundStyle(Color.ypBlackUniversal)
+
+            if viewModel.hasTransfers {
+                Text(viewModel.transferLabel)
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundStyle(Color.ypRed)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var dateView: some View {
+        if !viewModel.dateText.isEmpty {
+            Text(viewModel.dateText)
+                .font(.system(size: 12, weight: .regular))
+                .foregroundStyle(Color.ypBlackUniversal)
+        }
     }
 
     private var timelineRow: some View {

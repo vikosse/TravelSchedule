@@ -34,16 +34,8 @@ struct MainScreenView: View {
             }
         }
         .navigationDestination(isPresented: $viewModel.isShowingCarrierList) {
-            if let fromCity = viewModel.fromCity,
-               let fromStation = viewModel.fromStation,
-               let toCity = viewModel.toCity,
-               let toStation = viewModel.toStation {
-                CarrierListView(
-                    fromCity: fromCity,
-                    fromStation: fromStation,
-                    toCity: toCity,
-                    toStation: toStation
-                )
+            if let route = viewModel.route {
+                CarrierListView(route: route)
             }
         }
     }

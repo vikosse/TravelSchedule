@@ -9,10 +9,16 @@ import Combine
 @MainActor
 final class StationPickerViewModel: ObservableObject {
 
-    let city: City
+    // MARK: - Published properties
 
     @Published var searchText = ""
     @Published private(set) var filteredStations: [Station]
+
+    // MARK: - Dependencies
+
+    let city: City
+
+    // MARK: - Initializer
 
     init(city: City) {
         self.city = city

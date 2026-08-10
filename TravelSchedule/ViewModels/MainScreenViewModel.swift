@@ -14,7 +14,7 @@ enum RouteField {
 @MainActor
 final class MainScreenViewModel: ObservableObject {
 
-    let stationsStore: StationsStore
+    // MARK: - Published properties
 
     @Published private(set) var fromCity: City?
     @Published private(set) var fromStation: Station?
@@ -25,19 +25,19 @@ final class MainScreenViewModel: ObservableObject {
     @Published var isShowingCarrierList = false
     @Published private(set) var activeField: RouteField = .from
 
+    // MARK: - Dependencies
+
+    let stationsStore: StationsStore
+
+    // MARK: - Private properties
+
     private var cancellables: Set<AnyCancellable> = []
 
-    init(stationsStore: StationsStore) {
-        self.stationsStore = stationsStore
-
-        stationsStore.objectWillChange
-            .receive(on: RunLoop.main)
-            .sink { [weak self] _ in self?.objectWillChange.send() }
-            .store(in: &cancellables)
-    }
+    // MARK: - Computed properties
 
     var networkErrorKind: NetworkErrorKind? {
-        stationsStore.networkErrorKind
+        guard case let .failure(kind) = stationsStore.state else { return nil }
+        return kind
     }
 
     var fromText: String {
@@ -51,6 +51,24 @@ final class MainScreenViewModel: ObservableObject {
     var isSearchAvailable: Bool {
         fromStation != nil && toStation != nil
     }
+
+    var route: TravelRoute? {
+        guard let fromCity, let fromStation, let toCity, let toStation else { return nil }
+        return TravelRoute(fromCity: fromCity, fromStation: fromStation, toCity: toCity, toStation: toStation)
+    }
+
+    // MARK: - Initializer
+
+    init(stationsStore: StationsStore) {
+        self.stationsStore = stationsStore
+
+        stationsStore.objectWillChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+    }
+
+    // MARK: - Public methods
 
     func presentPicker(for field: RouteField) {
         activeField = field
@@ -85,6 +103,8 @@ final class MainScreenViewModel: ObservableObject {
     func retryLoadingStations() async {
         await stationsStore.reload()
     }
+
+    // MARK: - Private methods
 
     private func routeText(city: City?, station: Station?) -> String {
         guard let city else { return "" }

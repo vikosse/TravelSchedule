@@ -7,14 +7,14 @@ import SwiftUI
 
 struct CitySelectionView: View {
 
-    let onSelect: (City, Station) -> Void
-
     @StateObject private var viewModel: CityPickerViewModel
     @Environment(\.dismiss) private var dismiss
 
+    let onSelect: (City, Station) -> Void
+
     init(store: StationsStore, onSelect: @escaping (City, Station) -> Void) {
-        self.onSelect = onSelect
         _viewModel = StateObject(wrappedValue: CityPickerViewModel(store: store))
+        self.onSelect = onSelect
     }
 
     var body: some View {
@@ -47,17 +47,20 @@ struct CitySelectionView: View {
 
     @ViewBuilder
     private var content: some View {
-        if viewModel.isLoading {
+        switch viewModel.state {
+        case .idle, .loading:
             ProgressView()
                 .tint(Color.ypBlue)
-        } else if let networkErrorKind = viewModel.networkErrorKind {
+        case .failure(let networkErrorKind):
             NetworkErrorView(kind: networkErrorKind) {
                 Task { await viewModel.reload() }
             }
-        } else if viewModel.filteredCities.isEmpty {
-            NotFoundLabel(text: "Город не найден")
-        } else {
-            cityList
+        case .success:
+            if viewModel.filteredCities.isEmpty {
+                NotFoundLabel(text: "Город не найден")
+            } else {
+                cityList
+            }
         }
     }
 

@@ -9,22 +9,33 @@ import Combine
 @MainActor
 final class CityPickerViewModel: ObservableObject {
 
+    // MARK: - Published properties
+
     @Published var searchText = ""
-    @Published private(set) var filteredCities: [City]
+    @Published private(set) var filteredCities: [City] = []
+
+    // MARK: - Private properties
 
     private let store: StationsStore
     private var cancellables: Set<AnyCancellable> = []
 
-    var isLoading: Bool { store.isLoading }
-    var networkErrorKind: NetworkErrorKind? { store.networkErrorKind }
+    // MARK: - Computed properties
+
+    var state: StationsStoreState {
+        store.state
+    }
+
+    // MARK: - Initializer
 
     init(store: StationsStore) {
         self.store = store
-        self.filteredCities = store.cities
 
-        store.$cities
+        store.$state
             .combineLatest($searchText.debounce(for: .milliseconds(300), scheduler: RunLoop.main))
-            .map { cities, query in SearchFilter.apply(cities, query: query, keyPath: \.name) }
+            .map { state, query in
+                guard case let .success(cities) = state else { return [] }
+                return SearchFilter.apply(cities, query: query, keyPath: \.name)
+            }
             .receive(on: RunLoop.main)
             .assign(to: &$filteredCities)
 
@@ -33,6 +44,8 @@ final class CityPickerViewModel: ObservableObject {
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
     }
+
+    // MARK: - Public methods
 
     func loadIfNeeded() async {
         await store.loadIfNeeded()
