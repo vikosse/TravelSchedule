@@ -33,7 +33,7 @@ struct MainTabView: View {
                 .allowsHitTesting(selectedTab == .main)
 
                 NavigationStack {
-                    PlaceholderScreenView(title: "Настройки")
+                    SettingsView()
                 }
                 .opacity(selectedTab == .settings ? 1 : 0)
                 .allowsHitTesting(selectedTab == .settings)

@@ -8,21 +8,26 @@ import SwiftUI
 struct MainScreenView: View {
 
     @ObservedObject var viewModel: MainScreenViewModel
+    @StateObject private var storiesViewModel = StoriesViewModel()
 
     var body: some View {
-        VStack(spacing: 16) {
-            routeCard
+        VStack(spacing: 0) {
+            StoriesCollectionView(viewModel: storiesViewModel)
+                .padding(.top, 16)
+                .padding(.bottom, 44)
 
-            if viewModel.isSearchAvailable {
-                findButton
+            VStack(spacing: 16) {
+                routeCard
+
+                if viewModel.isSearchAvailable {
+                    findButton
+                }
             }
 
             Spacer(minLength: 0)
         }
-        .padding(.top, 252)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color.ypWhite)
-        .ignoresSafeArea(edges: .top)
         .task {
             await viewModel.loadStationsIfNeeded()
         }
@@ -31,6 +36,15 @@ struct MainScreenView: View {
                 CitySelectionView(store: viewModel.stationsStore) { city, station in
                     viewModel.apply(city: city, station: station)
                 }
+            }
+        }
+        .fullScreenCover(isPresented: $storiesViewModel.isViewerPresented) {
+            StoriesViewerView(
+                stories: storiesViewModel.stories,
+                initialStoryIndex: storiesViewModel.initialStoryIndex,
+                viewedStore: storiesViewModel.viewedStore
+            ) {
+                storiesViewModel.isViewerPresented = false
             }
         }
         .navigationDestination(isPresented: $viewModel.isShowingCarrierList) {
