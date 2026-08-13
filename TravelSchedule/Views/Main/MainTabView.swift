@@ -10,10 +10,16 @@ private enum AppTab {
     case settings
 }
 
+enum TabBarMetrics {
+    static let contentHeight: CGFloat = 47
+}
+
 struct MainTabView: View {
 
     @State private var selectedTab: AppTab = .main
     @StateObject private var mainScreenViewModel = MainScreenViewModel(stationsStore: StationsStore())
+    @State private var mainPath = NavigationPath()
+    @State private var isTabBarVisible = true
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -24,8 +30,12 @@ struct MainTabView: View {
                             Task { await mainScreenViewModel.retryLoadingStations() }
                         }
                     } else {
-                        NavigationStack {
-                            MainScreenView(viewModel: mainScreenViewModel)
+                        NavigationStack(path: $mainPath) {
+                            MainScreenView(
+                                viewModel: mainScreenViewModel,
+                                path: $mainPath,
+                                isTabBarVisible: $isTabBarVisible
+                            )
                         }
                     }
                 }
@@ -39,9 +49,9 @@ struct MainTabView: View {
                 .allowsHitTesting(selectedTab == .settings)
             }
 
-            if !mainScreenViewModel.isShowingCarrierList {
-                tabBar
-            }
+            tabBar
+                .opacity(isTabBarVisible ? 1 : 0)
+                .allowsHitTesting(isTabBarVisible)
         }
     }
 

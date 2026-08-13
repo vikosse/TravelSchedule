@@ -4,18 +4,18 @@
 //
 
 import Foundation
-import SwiftUI
 import Combine
 
 @MainActor
 final class StoryPageViewModel: ObservableObject {
 
-    private static let pageDuration = 10.0
+    static let pageDuration = 10.0
 
     // MARK: - Published properties
 
     @Published private(set) var pageIndex: Int
     @Published private(set) var progressValue: CGFloat = 0
+    @Published private(set) var isProgressAnimated = false
     @Published private(set) var isActive = false
 
     // MARK: - Dependencies
@@ -102,13 +102,13 @@ final class StoryPageViewModel: ObservableObject {
 
     private func restartTimer() {
         timerTask?.cancel()
+        isProgressAnimated = false
         progressValue = 0
 
         timerTask = Task { [weak self] in
             guard let self else { return }
-            withAnimation(.linear(duration: Self.pageDuration)) {
-                self.progressValue = 1
-            }
+            self.isProgressAnimated = true
+            self.progressValue = 1
             try? await Task.sleep(for: .seconds(Self.pageDuration))
             guard !Task.isCancelled else { return }
             self.advancePage()

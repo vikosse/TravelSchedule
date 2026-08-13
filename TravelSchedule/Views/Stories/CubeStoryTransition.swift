@@ -2,10 +2,6 @@
 //  CubeStoryTransition.swift
 //  TravelSchedule
 //
-//  Reusable interactive 3D "cube" transition, generic over any Identifiable
-//  item. Knows nothing about story pages, timers, or images — only about
-//  paging between `items` at `currentIndex` via drag or programmatic advance.
-//
 
 import SwiftUI
 import Combine
@@ -21,9 +17,6 @@ struct CubeTransitionConfiguration {
     static let `default` = CubeTransitionConfiguration()
 }
 
-/// Drives the transition's live value and lets external callers (tap zones,
-/// auto-advance timers) trigger the same animated cube commit that a manual
-/// swipe would produce.
 @MainActor
 final class CubeTransitionController: ObservableObject {
 
@@ -87,15 +80,6 @@ struct CubeStoryTransition<Item: Identifiable, Content: View>: View {
             let width = max(proxy.size.width, 1)
             let progress = controller.dragTranslation / width
 
-            // Both neighbor faces stay in the tree unconditionally (only array
-            // bounds gate them, which never changes mid-transaction). If they were
-            // inserted only once `progress` crossed 0, a single withAnimation jump
-            // (tap, auto-advance) would see them appear in the "after" state with
-            // no "before" state to interpolate from — SwiftUI just pops them in
-            // instead of rotating them in. Keeping them permanent, and clamping
-            // each one's own progress to the half where it's actually relevant,
-            // lets Core Animation interpolate every face continuously regardless
-            // of whether the transaction came from a live drag or a single commit.
             let forwardProgress = min(progress, 0)
             let backwardProgress = max(progress, 0)
 
@@ -215,12 +199,6 @@ struct CubeStoryTransition<Item: Identifiable, Content: View>: View {
     }
 
     private func commit(to newIndex: Int, targetTranslation: CGFloat) {
-        // A commit started mid-drag already has real finger momentum behind it —
-        // a spring reads as a natural continuation of that motion. A commit
-        // triggered from rest (tap zone, auto-advance timer) has no momentum to
-        // continue, so a spring's slow ease-in would read as a different,
-        // slower-feeling animation than the swipe. `easeOut` starts at full speed
-        // instead, matching the "already moving" feel of a finished swipe.
         let isFreshCommit = controller.dragTranslation == 0
         let animation: Animation = isFreshCommit
             ? .easeOut(duration: configuration.springResponse)
@@ -229,9 +207,6 @@ struct CubeStoryTransition<Item: Identifiable, Content: View>: View {
         withAnimation(animation) {
             controller.dragTranslation = targetTranslation
         }
-        // `withAnimation(_:completion:)` needs iOS 17; the deployment target here is
-        // 16.6, so completion is approximated by `springResponse` instead of the
-        // real animation's settle time. Good enough visually, but not exact.
         DispatchQueue.main.asyncAfter(deadline: .now() + configuration.springResponse) {
             currentIndex = newIndex
             controller.dragTranslation = 0

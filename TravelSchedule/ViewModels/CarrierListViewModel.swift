@@ -20,11 +20,12 @@ final class CarrierListViewModel: ObservableObject {
     @Published private(set) var state: CarrierListState = .loading
     @Published private(set) var selectedTimeSlots: Set<TimeSlot> = []
     @Published private(set) var transfersOption: TransfersOption?
-    @Published var isShowingFilters = false
 
     // MARK: - Private properties
 
     private let route: TravelRoute
+    private let service: ScheduleBetweenStationsServiceProtocol
+    private var hasLoadedOnce = false
 
     // MARK: - Computed properties
 
@@ -41,7 +42,9 @@ final class CarrierListViewModel: ObservableObject {
 
     var rowViewModels: [CarrierRowViewModel] {
         let fallbackDate = ScheduleFormatter.today()
-        return filteredSegments.map { CarrierRowViewModel(segment: $0, fallbackDate: fallbackDate) }
+        return filteredSegments.enumerated().map { index, segment in
+            CarrierRowViewModel(segment: segment, fallbackDate: fallbackDate, index: index)
+        }
     }
 
     var hasActiveFilters: Bool {
@@ -55,18 +58,25 @@ final class CarrierListViewModel: ObservableObject {
 
     // MARK: - Initializer
 
-    init(route: TravelRoute) {
+    init(
+        route: TravelRoute,
+        service: ScheduleBetweenStationsServiceProtocol = ScheduleBetweenStationsService(client: try! APIClientFactory.makeClient())
+    ) {
         self.route = route
+        self.service = service
     }
 
     // MARK: - Public methods
+
+    func loadIfNeeded() async {
+        guard !hasLoadedOnce else { return }
+        await load()
+    }
 
     func load() async {
         state = .loading
 
         do {
-            let client = try APIClientFactory.makeClient()
-            let service = ScheduleBetweenStationsService(client: client)
             let result = try await service.getScheduleBetweenStations(
                 from: route.fromStation.id,
                 to: route.toStation.id,
@@ -74,14 +84,11 @@ final class CarrierListViewModel: ObservableObject {
                 transfers: true
             )
             let segments = (result.segments ?? []).sorted { departureSortKey(for: $0) < departureSortKey(for: $1) }
+            hasLoadedOnce = true
             state = .success(segments)
         } catch {
             state = .failure(NetworkErrorClassifier.classify(error))
         }
-    }
-
-    func showFilters() {
-        isShowingFilters = true
     }
 
     func applyFilters(timeSlots: Set<TimeSlot>, transfersOption: TransfersOption?) {

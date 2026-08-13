@@ -31,7 +31,11 @@ final class CityPickerViewModel: ObservableObject {
         self.store = store
 
         store.$state
-            .combineLatest($searchText.debounce(for: .milliseconds(300), scheduler: RunLoop.main))
+            .combineLatest(
+                $searchText
+                    .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
+                    .prepend(searchText)
+            )
             .map { state, query in
                 guard case let .success(cities) = state else { return [] }
                 return SearchFilter.apply(cities, query: query, keyPath: \.name)

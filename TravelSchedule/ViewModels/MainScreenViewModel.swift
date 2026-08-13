@@ -22,7 +22,6 @@ final class MainScreenViewModel: ObservableObject {
     @Published private(set) var toStation: Station?
 
     @Published var isPickerPresented = false
-    @Published var isShowingCarrierList = false
     @Published private(set) var activeField: RouteField = .from
 
     // MARK: - Dependencies
@@ -90,10 +89,6 @@ final class MainScreenViewModel: ObservableObject {
     func swapFields() {
         swap(&fromCity, &toCity)
         swap(&fromStation, &toStation)
-    }
-
-    func find() {
-        isShowingCarrierList = true
     }
 
     func loadStationsIfNeeded() async {

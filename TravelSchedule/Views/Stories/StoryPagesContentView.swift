@@ -2,12 +2,6 @@
 //  StoryPagesContentView.swift
 //  TravelSchedule
 //
-//  Renders a single story inside CubeStoryTransition. Owns no state itself —
-//  page index, the auto-advance timer, and "viewed" bookkeeping all live in
-//  StoryPageViewModel. Page-to-page switching within a story is an instant
-//  cut (no animation) — only crossing to a different story goes through the
-//  cube transition, requested via the view model's navigation callbacks.
-//
 
 import SwiftUI
 
@@ -89,6 +83,10 @@ struct StoryPagesContentView: View {
                     Capsule()
                         .fill(Color.ypBlue)
                         .frame(width: proxy.size.width * (viewModel.isActive ? viewModel.progressValue : 0))
+                        .animation(
+                            viewModel.isProgressAnimated ? .linear(duration: StoryPageViewModel.pageDuration) : nil,
+                            value: viewModel.progressValue
+                        )
                 }
             }
         }

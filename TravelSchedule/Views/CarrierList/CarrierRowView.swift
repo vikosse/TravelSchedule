@@ -8,22 +8,28 @@ import SwiftUI
 struct CarrierRowView: View {
 
     let viewModel: CarrierRowViewModel
+    let onTap: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .center, spacing: 8) {
-                logoView
-                carrierInfoView
-                Spacer(minLength: 0)
-                dateView
-            }
-            .padding(.horizontal, 14)
+        Button {
+            onTap()
+        } label: {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .center, spacing: 8) {
+                    logoView
+                    carrierInfoView
+                    Spacer(minLength: 0)
+                    dateView
+                }
+                .padding(.horizontal, 14)
 
-            timelineRow
+                timelineRow
+            }
+            .padding(.top, 14)
+            .background(Color.ypLightGrey)
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         }
-        .padding(.top, 14)
-        .background(Color.ypLightGrey)
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .buttonStyle(.plain)
     }
 
     private var logoView: some View {
@@ -32,15 +38,13 @@ struct CarrierRowView: View {
             .frame(width: 38, height: 38)
             .overlay {
                 if let logoURL = viewModel.logoURL {
-                    AsyncImage(url: logoURL) { phase in
-                        if let image = phase.image {
-                            image
-                                .resizable()
-                                .scaledToFit()
-                                .padding(6)
-                        } else {
-                            logoPlaceholder
-                        }
+                    CachedAsyncImage(url: logoURL) { image in
+                        image
+                            .resizable()
+                            .scaledToFit()
+                            .padding(6)
+                    } placeholder: {
+                        logoPlaceholder
                     }
                 } else {
                     logoPlaceholder

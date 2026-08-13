@@ -9,6 +9,8 @@ struct MainScreenView: View {
 
     @ObservedObject var viewModel: MainScreenViewModel
     @StateObject private var storiesViewModel = StoriesViewModel()
+    @Binding var path: NavigationPath
+    @Binding var isTabBarVisible: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -47,10 +49,11 @@ struct MainScreenView: View {
                 storiesViewModel.isViewerPresented = false
             }
         }
-        .navigationDestination(isPresented: $viewModel.isShowingCarrierList) {
-            if let route = viewModel.route {
-                CarrierListView(route: route)
-            }
+        .navigationDestination(for: TravelRoute.self) { route in
+            CarrierListView(route: route, path: $path)
+        }
+        .onAppear {
+            isTabBarVisible = true
         }
     }
 
@@ -110,7 +113,10 @@ struct MainScreenView: View {
 
     private var findButton: some View {
         Button {
-            viewModel.find()
+            if let route = viewModel.route {
+                isTabBarVisible = false
+                path.append(route)
+            }
         } label: {
             Text("Найти")
                 .font(.system(size: 17, weight: .semibold))
@@ -124,5 +130,9 @@ struct MainScreenView: View {
 }
 
 #Preview {
-    MainScreenView(viewModel: MainScreenViewModel(stationsStore: StationsStore()))
+    MainScreenView(
+        viewModel: MainScreenViewModel(stationsStore: StationsStore()),
+        path: .constant(NavigationPath()),
+        isTabBarVisible: .constant(true)
+    )
 }
