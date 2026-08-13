@@ -70,15 +70,15 @@ struct SettingsView: View {
     }
 
     private var footer: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 16) {
             Text("Приложение использует API «Яндекс.Расписания»")
             Text("Версия 1.0 (beta)")
         }
         .font(.system(size: 12, weight: .regular))
-        .foregroundStyle(Color.ypGray)
+        .foregroundStyle(Color.ypBlack)
         .multilineTextAlignment(.center)
         .frame(maxWidth: .infinity)
-        .padding(.bottom, TabBarMetrics.contentHeight + 24)
+        .padding(.bottom, TabBarMetrics.contentHeight + 14)
     }
 }
 
