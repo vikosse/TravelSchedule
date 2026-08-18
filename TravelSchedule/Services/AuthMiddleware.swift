@@ -9,7 +9,7 @@ import Foundation
 import OpenAPIRuntime
 import HTTPTypes
 
-struct AuthMiddleware {
+struct AuthMiddleware: Sendable {
     private let apiKey: String
 
     init(apiKey: String) {

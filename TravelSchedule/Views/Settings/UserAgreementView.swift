@@ -9,19 +9,17 @@ struct UserAgreementView: View {
 
     // MARK: - Properties
 
+    @StateObject private var viewModel = UserAgreementViewModel()
     @Environment(\.dismiss) private var dismiss
-    @State private var isLoading = true
-
-    private let agreementURL = URL(string: "https://yandex.ru/legal/practicum_offer")!
 
     // MARK: - Body
 
     var body: some View {
         ZStack {
-            WebView(url: agreementURL, isLoading: $isLoading)
+            WebView(webView: viewModel.webViewLoader.webView)
                 .ignoresSafeArea(edges: .bottom)
 
-            if isLoading {
+            if viewModel.isLoading {
                 ProgressView()
                     .tint(Color.ypBlue)
             }
@@ -39,6 +37,9 @@ struct UserAgreementView: View {
                         .foregroundStyle(Color.ypBlack)
                 }
             }
+        }
+        .task {
+            await viewModel.load()
         }
     }
 }

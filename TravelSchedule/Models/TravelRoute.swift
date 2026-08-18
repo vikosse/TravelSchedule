@@ -5,7 +5,7 @@
 
 import Foundation
 
-struct TravelRoute: Hashable {
+struct TravelRoute: Hashable, Sendable {
     let fromCity: City
     let fromStation: Station
     let toCity: City
