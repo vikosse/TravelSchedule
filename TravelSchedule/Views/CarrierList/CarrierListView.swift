@@ -5,12 +5,19 @@
 
 import SwiftUI
 
+enum CarrierListRoute: Hashable {
+    case filters
+    case carrierInfo(String)
+}
+
 struct CarrierListView: View {
 
     @StateObject private var viewModel: CarrierListViewModel
+    @Binding var path: NavigationPath
 
-    init(route: TravelRoute) {
+    init(route: TravelRoute, path: Binding<NavigationPath>) {
         _viewModel = StateObject(wrappedValue: CarrierListViewModel(route: route))
+        _path = path
     }
 
     var body: some View {
@@ -33,16 +40,30 @@ struct CarrierListView: View {
             }
         }
         .task {
-            await viewModel.load()
+            await viewModel.loadIfNeeded()
         }
-        .navigationDestination(isPresented: $viewModel.isShowingFilters) {
-            FiltersView(
-                selectedTimeSlots: viewModel.selectedTimeSlots,
-                transfersOption: viewModel.transfersOption
-            ) { timeSlots, transfersOption in
-                viewModel.applyFilters(timeSlots: timeSlots, transfersOption: transfersOption)
+        .navigationDestination(for: CarrierListRoute.self) { route in
+            switch route {
+            case .filters:
+                FiltersView(
+                    selectedTimeSlots: viewModel.selectedTimeSlots,
+                    transfersOption: viewModel.transfersOption
+                ) { timeSlots, transfersOption in
+                    viewModel.applyFilters(timeSlots: timeSlots, transfersOption: transfersOption)
+                }
+            case .carrierInfo(let code):
+                CarrierInfoView(carrierCode: code)
             }
         }
+    }
+
+    private func showFilters() {
+        path.append(CarrierListRoute.filters)
+    }
+
+    private func showCarrierInfo(code: String?) {
+        guard let code else { return }
+        path.append(CarrierListRoute.carrierInfo(code))
     }
 
     @ViewBuilder
@@ -62,7 +83,9 @@ struct CarrierListView: View {
                 ScrollView {
                     LazyVStack(spacing: 8) {
                         ForEach(viewModel.rowViewModels) { rowViewModel in
-                            CarrierRowView(viewModel: rowViewModel)
+                            CarrierRowView(viewModel: rowViewModel) {
+                                showCarrierInfo(code: rowViewModel.carrierCode)
+                            }
                         }
                     }
                     .padding(16)
@@ -73,7 +96,7 @@ struct CarrierListView: View {
 
     private var refineTimeButton: some View {
         Button {
-            viewModel.showFilters()
+            showFilters()
         } label: {
             HStack(spacing: 8) {
                 Text("Уточнить время")
@@ -99,11 +122,14 @@ struct CarrierListView: View {
 
 #Preview {
     NavigationStack {
-        CarrierListView(route: TravelRoute(
-            fromCity: City(id: "c213", name: "Москва", stations: []),
-            fromStation: Station(id: "s9601788", name: "Ярославский вокзал"),
-            toCity: City(id: "c2", name: "Санкт-Петербург", stations: []),
-            toStation: Station(id: "s9602497", name: "Балтийский вокзал")
-        ))
+        CarrierListView(
+            route: TravelRoute(
+                fromCity: City(id: "c213", name: "Москва", stations: []),
+                fromStation: Station(id: "s9601788", name: "Ярославский вокзал"),
+                toCity: City(id: "c2", name: "Санкт-Петербург", stations: []),
+                toStation: Station(id: "s9602497", name: "Балтийский вокзал")
+            ),
+            path: .constant(NavigationPath())
+        )
     }
 }

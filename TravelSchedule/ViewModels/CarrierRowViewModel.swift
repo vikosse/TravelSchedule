@@ -9,27 +9,43 @@ struct CarrierRowViewModel: Identifiable {
 
     let segment: Segment
     let fallbackDate: String
+    let index: Int
 
     var id: String {
         let threadUID = segment.thread?.uid ?? segment.details?.compactMap(\.thread).first?.uid ?? ""
         let departureKey = segment.departure ?? segment.start_date ?? ""
-        return "\(threadUID)_\(departureKey)"
+        return "\(index)_\(threadUID)_\(departureKey)"
+    }
+
+    private var allThreads: [APIThread] {
+        ([segment.thread] + (segment.details?.compactMap(\.thread) ?? [])).compactMap { $0 }
     }
 
     var carrierName: String {
-        if let thread = segment.thread {
-            return thread.carrier?.title ?? thread.title ?? ""
-        }
-        if let firstLegThread = segment.details?.compactMap(\.thread).first {
-            return firstLegThread.carrier?.title ?? firstLegThread.title ?? ""
+        for thread in allThreads {
+            if let title = thread.carrier?.title ?? thread.title, !title.isEmpty {
+                return title
+            }
         }
         return ""
     }
 
     var logoURL: URL? {
-        let logo = segment.thread?.carrier?.logo ?? segment.details?.compactMap(\.thread).first?.carrier?.logo
-        guard let logo else { return nil }
-        return URL(string: logo)
+        for thread in allThreads {
+            if let logo = thread.carrier?.logo, !logo.isEmpty, let url = URL(string: logo) {
+                return url
+            }
+        }
+        return nil
+    }
+
+    var carrierCode: String? {
+        for thread in allThreads {
+            if let code = thread.carrier?.code {
+                return String(code)
+            }
+        }
+        return nil
     }
 
     var transferCityName: String? {
