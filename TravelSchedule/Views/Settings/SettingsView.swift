@@ -9,7 +9,7 @@ struct SettingsView: View {
 
     // MARK: - Properties
 
-    @AppStorage("isDarkThemeEnabled") private var isDarkThemeEnabled = false
+    @AppStorage(AppStorageKey.isDarkThemeEnabled) private var isDarkThemeEnabled = false
 
     // MARK: - Body
 

@@ -24,7 +24,7 @@ final class CarrierListViewModel: ObservableObject {
     // MARK: - Private properties
 
     private let route: TravelRoute
-    private let service: ScheduleBetweenStationsServiceProtocol
+    private var service: ScheduleBetweenStationsServiceProtocol?
     private var hasLoadedOnce = false
 
     // MARK: - Computed properties
@@ -60,7 +60,7 @@ final class CarrierListViewModel: ObservableObject {
 
     init(
         route: TravelRoute,
-        service: ScheduleBetweenStationsServiceProtocol = ScheduleBetweenStationsService(client: try! APIClientFactory.makeClient())
+        service: ScheduleBetweenStationsServiceProtocol? = nil
     ) {
         self.route = route
         self.service = service
@@ -77,6 +77,7 @@ final class CarrierListViewModel: ObservableObject {
         state = .loading
 
         do {
+            let service = try resolveService()
             let result = try await service.getScheduleBetweenStations(
                 from: route.fromStation.id,
                 to: route.toStation.id,
@@ -97,6 +98,14 @@ final class CarrierListViewModel: ObservableObject {
     }
 
     // MARK: - Private methods
+
+    private func resolveService() throws -> ScheduleBetweenStationsServiceProtocol {
+        if let service { return service }
+        let client = try APIClientFactory.makeClient()
+        let service = ScheduleBetweenStationsService(client: client)
+        self.service = service
+        return service
+    }
 
     private func departureSortKey(for segment: Segment) -> String {
         let datePart = segment.start_date ?? ""

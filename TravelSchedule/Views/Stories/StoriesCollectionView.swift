@@ -14,7 +14,7 @@ struct StoriesCollectionView: View {
     // MARK: - Body
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        ScrollView(.horizontal) {
             HStack(spacing: 12) {
                 ForEach(viewModel.stories) { story in
                     StoryPreviewCell(story: story, isViewed: viewModel.isViewed(story))
@@ -25,6 +25,7 @@ struct StoriesCollectionView: View {
             }
             .padding(.horizontal, 16)
         }
+        .scrollIndicators(.hidden)
     }
 }
 

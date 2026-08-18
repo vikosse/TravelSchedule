@@ -33,7 +33,7 @@ struct CarrierInfoView: View {
                     Button {
                         dismiss()
                     } label: {
-                        Image(systemName: "chevron.left")
+                        Image(systemName: SystemImageName.backChevron)
                             .font(.system(size: 17, weight: .semibold))
                             .foregroundStyle(Color.ypBlack)
                     }

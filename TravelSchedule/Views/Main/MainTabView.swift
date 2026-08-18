@@ -39,19 +39,16 @@ struct MainTabView: View {
                         }
                     }
                 }
-                .opacity(selectedTab == .main ? 1 : 0)
-                .allowsHitTesting(selectedTab == .main)
+                .hiddenWhen(selectedTab != .main)
 
                 NavigationStack {
                     SettingsView()
                 }
-                .opacity(selectedTab == .settings ? 1 : 0)
-                .allowsHitTesting(selectedTab == .settings)
+                .hiddenWhen(selectedTab != .settings)
             }
 
             tabBar
-                .opacity(isTabBarVisible ? 1 : 0)
-                .allowsHitTesting(isTabBarVisible)
+                .hiddenWhen(!isTabBarVisible)
         }
     }
 

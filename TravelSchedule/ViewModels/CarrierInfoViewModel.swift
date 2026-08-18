@@ -22,13 +22,13 @@ final class CarrierInfoViewModel: ObservableObject {
     // MARK: - Private properties
 
     private let carrierCode: String
-    private let service: CarrierInfoServiceProtocol
+    private var service: CarrierInfoServiceProtocol?
 
     // MARK: - Initializer
 
     init(
         carrierCode: String,
-        service: CarrierInfoServiceProtocol = CarrierInfoService(client: try! APIClientFactory.makeClient())
+        service: CarrierInfoServiceProtocol? = nil
     ) {
         self.carrierCode = carrierCode
         self.service = service
@@ -40,6 +40,7 @@ final class CarrierInfoViewModel: ObservableObject {
         state = .loading
 
         do {
+            let service = try resolveService()
             let response = try await service.getCarrierInfo(code: carrierCode)
 
             guard let carrier = response.carrier else {
@@ -50,5 +51,15 @@ final class CarrierInfoViewModel: ObservableObject {
         } catch {
             state = .failure(NetworkErrorClassifier.classify(error))
         }
+    }
+
+    // MARK: - Private methods
+
+    private func resolveService() throws -> CarrierInfoServiceProtocol {
+        if let service { return service }
+        let client = try APIClientFactory.makeClient()
+        let service = CarrierInfoService(client: client)
+        self.service = service
+        return service
     }
 }
