@@ -5,14 +5,14 @@
 
 import Foundation
 
-struct StoryPage: Identifiable, Hashable {
+struct StoryPage: Identifiable, Hashable, Sendable {
     let id: Int
     let imageName: String
     let title: String
     let subtitle: String
 }
 
-struct Story: Identifiable, Hashable {
+struct Story: Identifiable, Hashable, Sendable {
     let id: Int
     let previewImageName: String
     let pages: [StoryPage]

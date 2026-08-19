@@ -9,35 +9,51 @@ struct UserAgreementView: View {
 
     // MARK: - Properties
 
+    @StateObject private var viewModel = UserAgreementViewModel()
     @Environment(\.dismiss) private var dismiss
-    @State private var isLoading = true
-
-    private let agreementURL = URL(string: "https://yandex.ru/legal/practicum_offer")!
 
     // MARK: - Body
 
     var body: some View {
-        ZStack {
-            WebView(url: agreementURL, isLoading: $isLoading)
-                .ignoresSafeArea(edges: .bottom)
+        content
+            .navigationTitle("Пользовательское соглашение")
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: SystemImageName.backChevron)
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(Color.ypBlack)
+                    }
+                }
+            }
+            .task {
+                await viewModel.load()
+            }
+    }
 
-            if isLoading {
+    // MARK: - Private views
+
+    @ViewBuilder
+    private var content: some View {
+        switch viewModel.state {
+        case .loading:
+            ZStack {
+                WebView(webView: viewModel.webViewLoader.webView)
+                    .ignoresSafeArea(edges: .bottom)
+
                 ProgressView()
                     .tint(Color.ypBlue)
             }
-        }
-        .navigationTitle("Пользовательское соглашение")
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: SystemImageName.backChevron)
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(Color.ypBlack)
-                }
+        case .loaded:
+            WebView(webView: viewModel.webViewLoader.webView)
+                .ignoresSafeArea(edges: .bottom)
+        case .failure(let networkErrorKind):
+            NetworkErrorView(kind: networkErrorKind) {
+                Task { await viewModel.load() }
             }
         }
     }

@@ -6,23 +6,9 @@
 //
 
 import OpenAPIRuntime
-import OpenAPIURLSession
 
 typealias Segments = Components.Schemas.Segments
 
 protocol ScheduleBetweenStationsServiceProtocol {
     func getScheduleBetweenStations(from: String, to: String, date: String?, transfers: Bool?) async throws -> Segments
-}
-
-final class ScheduleBetweenStationsService: BaseService, ScheduleBetweenStationsServiceProtocol {
-
-    func getScheduleBetweenStations(from: String, to: String, date: String? = nil, transfers: Bool? = nil) async throws -> Segments {
-        let response = try await client.getSchedualBetweenStations(query: .init(
-            from: from,
-            to: to,
-            date: date,
-            transfers: transfers
-        ))
-        return try response.ok.body.json
-    }
 }

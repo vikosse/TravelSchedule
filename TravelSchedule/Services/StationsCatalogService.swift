@@ -4,19 +4,16 @@
 //
 
 import Foundation
-import OpenAPIRuntime
-import OpenAPIURLSession
 
 protocol StationsCatalogServiceProtocol {
-    func fetchCities(client: Client) async throws -> [City]
+    func fetchCities() async throws -> [City]
 }
 
-struct StationsCatalogService: StationsCatalogServiceProtocol {
+enum StationsCatalogMapper {
 
-    func fetchCities(client: Client) async throws -> [City] {
-        let fullData = try await AllStationsRawDataFetcher.fetchData(client: client)
-        let payload = try JSONDecoder().decode(CatalogPayload.self, from: fullData)
-        return Self.mapCities(from: payload)
+    static func mapCities(from data: Data) throws -> [City] {
+        let payload = try JSONDecoder().decode(CatalogPayload.self, from: data)
+        return mapCities(from: payload)
     }
 
     private static func mapCities(from payload: CatalogPayload) -> [City] {

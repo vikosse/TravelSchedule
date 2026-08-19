@@ -7,15 +7,13 @@ import SwiftUI
 
 struct SettingsView: View {
 
-    // MARK: - Properties
-
-    @AppStorage(AppStorageKey.isDarkThemeEnabled) private var isDarkThemeEnabled = false
-
-    // MARK: - Body
+    @State private var viewModel = SettingsViewModel()
 
     var body: some View {
+        @Bindable var viewModel = viewModel
+
         VStack(alignment: .leading, spacing: 0) {
-            themeRow
+            themeRow(isDarkThemeEnabled: $viewModel.isDarkThemeEnabled)
             agreementRow
 
             Spacer(minLength: 0)
@@ -29,9 +27,7 @@ struct SettingsView: View {
         .toolbar(.hidden, for: .navigationBar)
     }
 
-    // MARK: - Private views
-
-    private var themeRow: some View {
+    private func themeRow(isDarkThemeEnabled: Binding<Bool>) -> some View {
         HStack {
             Text("Темная тема")
                 .font(.system(size: 17, weight: .regular))
@@ -39,7 +35,7 @@ struct SettingsView: View {
 
             Spacer(minLength: 0)
 
-            Toggle("", isOn: $isDarkThemeEnabled)
+            Toggle("", isOn: isDarkThemeEnabled)
                 .labelsHidden()
                 .tint(Color.ypBlue)
         }

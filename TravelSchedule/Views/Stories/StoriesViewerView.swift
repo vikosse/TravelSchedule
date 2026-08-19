@@ -65,8 +65,8 @@ struct StoriesViewerView: View {
             .background(Color.black.ignoresSafeArea())
             .ignoresSafeArea()
         }
-        .onChange(of: viewModel.navigationRequest) { _ in
-            handle(viewModel.navigationRequest)
+        .onChange(of: viewModel.navigationRequest) { _, newValue in
+            handle(newValue)
         }
     }
 

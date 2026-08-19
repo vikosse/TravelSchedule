@@ -27,7 +27,7 @@ final class StationsStore: ObservableObject {
 
     // MARK: - Initializer
 
-    init(service: StationsCatalogServiceProtocol = StationsCatalogService()) {
+    init(service: StationsCatalogServiceProtocol = NetworkClient.shared) {
         self.service = service
     }
 
@@ -49,8 +49,7 @@ final class StationsStore: ObservableObject {
         state = .loading
 
         do {
-            let client = try APIClientFactory.makeClient()
-            let cities = try await service.fetchCities(client: client)
+            let cities = try await service.fetchCities()
             hasLoadedOnce = true
             state = .success(cities)
         } catch {

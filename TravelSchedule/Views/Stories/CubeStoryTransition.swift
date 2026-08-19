@@ -30,6 +30,8 @@ final class CubeTransitionController: ObservableObject {
     @Published var dragTranslation: CGFloat = 0
     @Published var pendingAdvance: PendingAdvance?
 
+    var pendingCommitTask: Task<Void, Never>?
+
     // MARK: - Public methods
 
     func advanceForward() {
@@ -120,8 +122,8 @@ struct CubeStoryTransition<Item: Identifiable, Content: View>: View {
             }
             .contentShape(Rectangle())
             .gesture(dragGesture(width: width))
-            .onChange(of: controller.pendingAdvance) { _ in
-                guard let pending = controller.pendingAdvance else { return }
+            .onChange(of: controller.pendingAdvance) { _, newValue in
+                guard let pending = newValue else { return }
                 controller.pendingAdvance = nil
                 switch pending {
                 case .forward:
@@ -207,7 +209,12 @@ struct CubeStoryTransition<Item: Identifiable, Content: View>: View {
         withAnimation(animation) {
             controller.dragTranslation = targetTranslation
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + configuration.springResponse) {
+
+        controller.pendingCommitTask?.cancel()
+        let delay = configuration.springResponse
+        controller.pendingCommitTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(delay))
+            guard !Task.isCancelled else { return }
             currentIndex = newIndex
             controller.dragTranslation = 0
         }
