@@ -6,12 +6,18 @@
 import Foundation
 import Combine
 
+enum UserAgreementState {
+    case loading
+    case loaded
+    case failure(NetworkErrorKind)
+}
+
 @MainActor
 final class UserAgreementViewModel: ObservableObject {
 
     // MARK: - Published properties
 
-    @Published private(set) var isLoading = true
+    @Published private(set) var state: UserAgreementState = .loading
 
     // MARK: - Dependencies
 
@@ -24,8 +30,12 @@ final class UserAgreementViewModel: ObservableObject {
     // MARK: - Public methods
 
     func load() async {
-        isLoading = true
-        try? await webViewLoader.load(url: agreementURL)
-        isLoading = false
+        state = .loading
+        do {
+            try await webViewLoader.load(url: agreementURL)
+            state = .loaded
+        } catch {
+            state = .failure(NetworkErrorClassifier.classify(error))
+        }
     }
 }

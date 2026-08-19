@@ -66,7 +66,10 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         }
 
         do {
-            let (data, _) = try await URLSession.shared.data(from: url)
+            let (data, response) = try await URLSession.shared.data(from: url)
+            guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+                return
+            }
             guard let downloaded = UIImage(data: data) else { return }
             ImageCache.shared.insert(downloaded, for: url)
             withAnimation(.easeInOut(duration: 0.2)) {

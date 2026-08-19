@@ -31,8 +31,8 @@ struct StoryPagesContentView: View {
         .onAppear {
             viewModel.setActive(isActive)
         }
-        .onChange(of: isActive) { active in
-            viewModel.setActive(active)
+        .onChange(of: isActive) { _, newValue in
+            viewModel.setActive(newValue)
         }
     }
 
